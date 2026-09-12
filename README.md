@@ -9,6 +9,8 @@ automations.
 
 Compatible with **Jellyfin 12.0** (ABI `12.0.0.0`, .NET 10).
 
+### **Made with Claude (AI) (just to be transparent)**
+
 ## Features
 
 - Pushes a running/idle sensor state to Home Assistant via its REST API — no
