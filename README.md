@@ -57,7 +57,7 @@ Future updates are picked up the same way any other catalog plugin update is.
 |---|---|---|
 | Home Assistant URL | Base URL of your Home Assistant instance, e.g. `http://homeassistant.local:8123` | _(empty)_ |
 | Long-Lived Access Token | Token from Home Assistant → your profile → Security → Long-Lived Access Tokens | _(empty)_ |
-| Sensor entity id | Entity that is toggled `on`/`off` while a tracked task is running | `binary_sensor.jellyfin_task_running` |
+| Sensor entity id | Entity that is toggled `on`/`off` while a tracked task is running — see [Creating the sensor](#creating-the-sensor-in-home-assistant) | `binary_sensor.jellyfin_task_running` |
 | Task keys to track | Comma-separated scheduled task keys; empty tracks every task | _(empty, all tasks)_ |
 | Also fire a Home Assistant event | Fires an event per task start/finish in addition to the sensor | enabled |
 | Event type name | Home Assistant event type used when the above is enabled | `jellyfin_scheduled_task` |
@@ -77,15 +77,42 @@ Jellyfin; the built-in library scan uses the key `RefreshLibrary`.
 - If enabled, it also `POST`s to `{HomeAssistantUrl}/api/events/{EventType}` with the
   task key/name/phase/status on every start and finish.
 
-## Using it in Home Assistant
+## Creating the sensor in Home Assistant
 
-The sensor is pushed via the REST API, so it appears automatically as soon as the
-plugin first posts to it — no entity needs to be predefined in Home Assistant. Note
-that a state pushed this way is **not** restored across a Home Assistant restart (it
-shows `unavailable` until Jellyfin next runs a tracked task), since there's no backing
-integration or device — that's expected for this style of push sensor.
+There are two ways to set up the entity behind `Sensor entity id`, depending on
+whether you want zero setup or a persistent, manageable entity.
 
-Example automation trigger on the sensor:
+### Option A: Do nothing (quick, entity id in the `binary_sensor.*`/`sensor.*` domain)
+
+Leave the default `binary_sensor.jellyfin_task_running`, or pick any id outside the
+`input_boolean` domain. The plugin pushes its state straight into the state machine
+via the REST API (`POST /api/states/...`), so the entity appears by itself the first
+time a tracked task runs — nothing to create in Home Assistant beforehand.
+
+Trade-off: since there's no integration or device behind it, the entity does **not**
+survive a Home Assistant restart — it simply won't exist again until Jellyfin's next
+task run posts to it. It also won't show up under Settings → Devices & Services →
+Entities (no registry entry), only in Developer Tools → States and in the entity
+pickers of the dashboard/automation editors.
+
+### Option B: Create an `input_boolean` helper (recommended for a persistent entity)
+
+1. Home Assistant → **Settings → Devices & Services → Helpers**.
+2. **+ Add Helper → Toggle**.
+3. Name it, e.g. `Jellyfin Task Running` (Home Assistant derives an entity id such as
+   `input_boolean.jellyfin_task_running`).
+4. Save, then set that entity id (with the `input_boolean.` prefix) as the plugin's
+   `Sensor entity id`.
+
+The plugin detects the `input_boolean.` prefix and calls its `turn_on`/`turn_off`
+service instead of overwriting the raw state, which is the correct way to drive a
+helper. It shows up under Settings → Entities like any other helper (rename, icon,
+area assignment) and survives Home Assistant restarts. The only limitation: helpers
+don't carry the `running_tasks` attribute that Option A's sensor gets, since a service
+call can only flip on/off, not attach custom attributes.
+
+Example automation trigger on the sensor (works the same for either option, just
+adjust the entity id):
 
 ```yaml
 trigger:

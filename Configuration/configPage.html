@@ -37,8 +37,13 @@
                             <input is="emby-input" type="text" id="SensorEntityId"
                                    label="Sensor entity id" />
                             <div class="fieldDescription">
-                                This entity is created/updated automatically via the Home Assistant
-                                REST API &mdash; no need to define it in Home Assistant first.
+                                A <code>binary_sensor.*</code> (or other non-helper) entity is
+                                created/updated automatically via the Home Assistant REST API &mdash;
+                                no need to define it in Home Assistant first, but it won't survive a
+                                Home Assistant restart. An <code>input_boolean.*</code> entity is
+                                instead toggled through its <code>turn_on</code>/<code>turn_off</code>
+                                service, so create that helper first under Home Assistant &rarr;
+                                Settings &rarr; Devices &amp; Services &rarr; Helpers.
                             </div>
                         </div>
 

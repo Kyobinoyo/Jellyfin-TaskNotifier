@@ -41,8 +41,12 @@ public sealed class HomeAssistantNotifier
     }
 
     /// <summary>
-    /// Sets the configured sensor entity to "on" or "off", including the list of
-    /// currently running (tracked) task names as an attribute.
+    /// Sets the configured sensor entity to "on" or "off". If the entity id belongs to
+    /// the <c>input_boolean</c> domain (a manually created Home Assistant helper), its
+    /// <c>turn_on</c>/<c>turn_off</c> service is called instead of overwriting the raw
+    /// state directly, since that's the correct way to drive a helper. Any other domain
+    /// (e.g. <c>binary_sensor</c>) is pushed straight into the state machine, including
+    /// the list of currently running (tracked) task names as an attribute.
     /// </summary>
     public Task SetSensorStateAsync(bool isRunning, IReadOnlyCollection<string> runningTaskNames)
     {
@@ -51,6 +55,16 @@ public sealed class HomeAssistantNotifier
             || string.IsNullOrWhiteSpace(config.AccessToken) || string.IsNullOrWhiteSpace(config.SensorEntityId))
         {
             return Task.CompletedTask;
+        }
+
+        var entityId = config.SensorEntityId.Trim();
+        var domain = entityId.Split('.', 2)[0];
+
+        if (string.Equals(domain, "input_boolean", StringComparison.OrdinalIgnoreCase))
+        {
+            var service = isRunning ? "turn_on" : "turn_off";
+            var serviceUrl = $"{config.HomeAssistantUrl.TrimEnd('/')}/api/services/input_boolean/{service}";
+            return SendAsync(HttpMethod.Post, serviceUrl, config.AccessToken, new { entity_id = entityId });
         }
 
         var payload = new
@@ -65,8 +79,8 @@ public sealed class HomeAssistantNotifier
             }
         };
 
-        var url = $"{config.HomeAssistantUrl.TrimEnd('/')}/api/states/{config.SensorEntityId}";
-        return SendAsync(HttpMethod.Post, url, config.AccessToken, payload);
+        var statesUrl = $"{config.HomeAssistantUrl.TrimEnd('/')}/api/states/{entityId}";
+        return SendAsync(HttpMethod.Post, statesUrl, config.AccessToken, payload);
     }
 
     /// <summary>
