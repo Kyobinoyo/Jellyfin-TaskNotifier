@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Home Assistant Task Notifier</title>
+</head>
+<body>
+    <div id="HomeAssistantTaskNotifierConfigPage" data-role="page"
+         class="page type-interior pluginConfigurationPage"
+         data-require="emby-input,emby-button,emby-checkbox">
+        <div data-role="content">
+            <div class="content-primary">
+                <form id="HomeAssistantTaskNotifierConfigForm">
+                    <div class="verticalSection">
+                        <h2>Home Assistant Task Notifier</h2>
+                        <p>
+                            While a tracked scheduled task (e.g. "Scan Media Library") is running, the
+                            sensor below is set to <code>on</code> in Home Assistant. It goes back to
+                            <code>off</code> once no tracked task is running anymore &mdash; use its
+                            state changes as an automation trigger.
+                        </p>
+
+                        <div class="inputContainer">
+                            <input is="emby-input" type="text" id="HomeAssistantUrl"
+                                   label="Home Assistant URL (e.g. http://homeassistant.local:8123)" />
+                        </div>
+
+                        <div class="inputContainer">
+                            <input is="emby-input" type="password" id="AccessToken"
+                                   label="Long-Lived Access Token" />
+                            <div class="fieldDescription">
+                                Create one in Home Assistant under your profile &rarr; Security &rarr;
+                                Long-Lived Access Tokens.
+                            </div>
+                        </div>
+
+                        <div class="inputContainer">
+                            <input is="emby-input" type="text" id="SensorEntityId"
+                                   label="Sensor entity id" />
+                            <div class="fieldDescription">
+                                This entity is created/updated automatically via the Home Assistant
+                                REST API &mdash; no need to define it in Home Assistant first.
+                            </div>
+                        </div>
+
+                        <div class="inputContainer">
+                            <input is="emby-input" type="text" id="IncludedTaskKeys"
+                                   label="Task keys to track, comma separated (empty = all tasks)" />
+                            <div class="fieldDescription">
+                                Leave empty to track every scheduled task. To only track specific ones,
+                                enter their task keys, e.g. <code>RefreshLibrary</code> for
+                                "Scan Media Library". Task names/keys are listed under
+                                Dashboard &rarr; Scheduled Tasks.
+                            </div>
+                        </div>
+
+                        <div class="checkboxContainer checkboxContainer-withDescription">
+                            <label>
+                                <input is="emby-checkbox" type="checkbox" id="FireTaskEvents" />
+                                <span>Also fire a Home Assistant event for every task start/finish</span>
+                            </label>
+                            <div class="fieldDescription checkboxFieldDescription">
+                                Useful if you want automations per specific task instead of the
+                                shared running/idle sensor above.
+                            </div>
+                        </div>
+
+                        <div class="inputContainer">
+                            <input is="emby-input" type="text" id="EventType" label="Event type name" />
+                        </div>
+
+                        <div class="checkboxContainer checkboxContainer-withDescription">
+                            <label>
+                                <input is="emby-checkbox" type="checkbox" id="AllowInvalidHttpsCertificate" />
+                                <span>Allow self-signed / invalid HTTPS certificate</span>
+                            </label>
+                            <div class="fieldDescription checkboxFieldDescription">
+                                Enable only if your Home Assistant URL uses HTTPS with a self-signed
+                                certificate.
+                            </div>
+                        </div>
+
+                        <button is="emby-button" type="submit" class="raised button-submit block">
+                            <span>Save</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <script type="text/javascript">
+            (function () {
+                var pluginId = 'e9a7a45f-d10a-49fb-8ca0-4ce05c79f874';
+                var page = document.querySelector('#HomeAssistantTaskNotifierConfigPage');
+
+                page.addEventListener('pageshow', function () {
+                    Dashboard.showLoadingMsg();
+                    ApiClient.getPluginConfiguration(pluginId).then(function (config) {
+                        document.querySelector('#HomeAssistantUrl').value = config.HomeAssistantUrl || '';
+                        document.querySelector('#AccessToken').value = config.AccessToken || '';
+                        document.querySelector('#SensorEntityId').value = config.SensorEntityId || '';
+                        document.querySelector('#IncludedTaskKeys').value = config.IncludedTaskKeys || '';
+                        document.querySelector('#FireTaskEvents').checked = !!config.FireTaskEvents;
+                        document.querySelector('#EventType').value = config.EventType || '';
+                        document.querySelector('#AllowInvalidHttpsCertificate').checked =
+                            !!config.AllowInvalidHttpsCertificate;
+                        Dashboard.hideLoadingMsg();
+                    });
+                });
+
+                page.querySelector('#HomeAssistantTaskNotifierConfigForm').addEventListener('submit', function (e) {
+                    e.preventDefault();
+                    Dashboard.showLoadingMsg();
+                    ApiClient.getPluginConfiguration(pluginId).then(function (config) {
+                        config.HomeAssistantUrl = document.querySelector('#HomeAssistantUrl').value;
+                        config.AccessToken = document.querySelector('#AccessToken').value;
+                        config.SensorEntityId = document.querySelector('#SensorEntityId').value;
+                        config.IncludedTaskKeys = document.querySelector('#IncludedTaskKeys').value;
+                        config.FireTaskEvents = document.querySelector('#FireTaskEvents').checked;
+                        config.EventType = document.querySelector('#EventType').value;
+                        config.AllowInvalidHttpsCertificate =
+                            document.querySelector('#AllowInvalidHttpsCertificate').checked;
+
+                        ApiClient.updatePluginConfiguration(pluginId, config).then(function (result) {
+                            Dashboard.processPluginConfigurationUpdateResult(result);
+                        });
+                    });
+                    return false;
+                });
+            })();
+        </script>
+    </div>
+</body>
+</html>
