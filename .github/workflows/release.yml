@@ -1,0 +1,81 @@
+name: Build and release plugin
+
+# Triggered by pushing a four-part version tag, e.g. v1.0.0.0 (must match the C#
+# assembly version format major.minor.build.revision).
+on:
+  push:
+    tags:
+      - "v[0-9]+.[0-9]+.[0-9]+.[0-9]+"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Determine version
+        id: version
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.0.x"
+
+      - name: Build
+        run: |
+          dotnet build Jellyfin.Plugin.HomeAssistantTaskNotifier.csproj -c Release \
+            -p:AssemblyVersion=${{ steps.version.outputs.version }} \
+            -p:FileVersion=${{ steps.version.outputs.version }}
+
+      - name: Package
+        id: package
+        run: |
+          mkdir -p artifacts
+          zipName="homeassistant-task-notifier_${{ steps.version.outputs.version }}.zip"
+          zipPath="artifacts/$zipName"
+          zip -j "$zipPath" bin/Release/net10.0/Jellyfin.Plugin.HomeAssistantTaskNotifier.dll
+          checksum=$(md5sum "$zipPath" | cut -d ' ' -f1)
+          echo "zip_name=$zipName" >> "$GITHUB_OUTPUT"
+          echo "zip_path=$zipPath" >> "$GITHUB_OUTPUT"
+          echo "checksum=$checksum" >> "$GITHUB_OUTPUT"
+
+      - name: Create GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: v${{ steps.version.outputs.version }}
+          files: ${{ steps.package.outputs.zip_path }}
+          generate_release_notes: true
+
+      - name: Update repository manifest
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+          CHECKSUM: ${{ steps.package.outputs.checksum }}
+          SOURCE_URL: https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/${{ steps.package.outputs.zip_name }}
+          TARGET_ABI: 12.0.0.0
+        run: |
+          timestamp=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+          jq --arg version "$VERSION" \
+             --arg checksum "$CHECKSUM" \
+             --arg sourceUrl "$SOURCE_URL" \
+             --arg timestamp "$timestamp" \
+             --arg targetAbi "$TARGET_ABI" \
+             '(.[0].versions) |= [{version:$version, changelog:"See GitHub release notes.", targetAbi:$targetAbi, sourceUrl:$sourceUrl, checksum:$checksum, timestamp:$timestamp}] + .' \
+             manifest.json > manifest.json.tmp
+          mv manifest.json.tmp manifest.json
+
+      - name: Commit updated manifest
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add manifest.json
+          git commit -m "Release v${{ steps.version.outputs.version }}: update plugin manifest" || echo "Nothing to commit"
+          git push origin HEAD:main

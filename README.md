@@ -20,7 +20,43 @@ Built for **Jellyfin 12.0** (ABI `12.0.0.0`, .NET 10).
   track every scheduled task, or list specific task keys (see Jellyfin's Dashboard →
   Scheduled Tasks) to only watch e.g. the library scan.
 
-## Build
+## Install via Jellyfin plugin repository (recommended)
+
+You don't need to build or copy files by hand — add this repo as a plugin repository
+and install/update it from Jellyfin's UI like any catalog plugin:
+
+1. Dashboard → Plugins → Repositories → **Add Repository**.
+2. Repository name: anything, e.g. `Home Assistant Task Notifier`.
+3. Repository URL:
+   ```
+   https://raw.githubusercontent.com/Kyobinoyo/Jellyfin-TaskNotifier/main/manifest.json
+   ```
+4. Save, then go to the **Catalog** tab — "Home Assistant Task Notifier" shows up
+   under General. Install it and restart Jellyfin.
+5. Configure it under Dashboard → Plugins as described above.
+
+This only works once at least one version has been released (see below) — until then
+`manifest.json` has an empty `versions` list and the plugin won't appear in the
+catalog.
+
+### Releasing a new version
+
+A GitHub Actions workflow (`.github/workflows/release.yml`) builds the plugin, creates
+a GitHub release with the DLL zip attached, and updates `manifest.json` automatically
+whenever a four-part version tag is pushed:
+
+```bash
+git tag v1.0.0.0
+git push origin v1.0.0.0
+```
+
+The tag (`major.minor.build.revision`, matching a C# assembly version) becomes both
+the GitHub release and the plugin version installers see. The workflow always targets
+ABI `12.0.0.0` (Jellyfin 12.0) — bump that in `release.yml` if you build against a
+different server version, and keep the NuGet package versions in the `.csproj` in
+sync.
+
+## Build (manual)
 
 Requires the .NET 10 SDK.
 
@@ -33,7 +69,7 @@ the `Jellyfin.Controller` / `Jellyfin.Model` NuGet package version and `meta.jso
 `targetAbi` match your **exact** installed Jellyfin server version (Dashboard →
 General). A mismatch makes Jellyfin refuse to load the plugin ("Not supported").
 
-## Install
+## Install (manual, without the repository)
 
 1. `dotnet build -c Release`
 2. Create a folder named `Home Assistant Task Notifier_1.0.0.0` inside your Jellyfin
