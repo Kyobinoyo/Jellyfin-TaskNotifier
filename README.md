@@ -1,6 +1,6 @@
 <!-- Repository & Project Info -->
 [![GitHub release (latest by date)](https://img.shields.io/github/v/release/Kyobinoyo/Jellyfin-TaskNotifier?style=flat-square&logo=github&color=blue)](https://github.com/Kyobinoyo/Jellyfin-TaskNotifier/releases)
-[![GitHub License](https://img.shields.io/github/license/Kyobinoyo/Jellyfin-TaskNotifier?style=flat-square&color=green)](LICENSE)
+[![GitHub License](https://img.shields.io/badge/License-GPL--3.0-green?style=flat-square&logo=gnu)](LICENSE)
 [![GitHub issues](https://img.shields.io/github/issues/Kyobinoyo/Jellyfin-TaskNotifier?style=flat-square)](https://github.com/Kyobinoyo/Jellyfin-TaskNotifier/issues)
 
 <!-- Ecosystem & Tech Stack -->
