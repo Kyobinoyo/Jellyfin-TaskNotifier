@@ -9,6 +9,14 @@
     "imageUrl": "https://raw.githubusercontent.com/Kyobinoyo/Jellyfin-TaskNotifier/main/assets/logo.png",
     "versions": [
       {
+        "version": "1.1.0.1",
+        "changelog": "See GitHub release notes.",
+        "targetAbi": "12.0.0.0",
+        "sourceUrl": "https://github.com/Kyobinoyo/Jellyfin-TaskNotifier/releases/download/v1.1.0.1/homeassistant-task-notifier_1.1.0.1.zip",
+        "checksum": "1ccf77ac63ed8620855712b9981af9d7",
+        "timestamp": "2026-09-13T11:50:38Z"
+      },
+      {
         "version": "1.1.0.0",
         "changelog": "See GitHub release notes.",
         "targetAbi": "12.0.0.0",
