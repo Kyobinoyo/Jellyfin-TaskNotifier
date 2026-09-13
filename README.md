@@ -1,3 +1,16 @@
+<!-- Repository & Project Info -->
+[![GitHub release (latest by date)](https://img.shields.io/github/v/release/Kyobinoyo/Jellyfin-TaskNotifier?style=flat-square&logo=github&color=blue)](https://github.com/Kyobinoyo/Jellyfin-TaskNotifier/releases)
+[![GitHub License](https://img.shields.io/github/license/Kyobinoyo/Jellyfin-TaskNotifier?style=flat-square&color=green)](LICENSE)
+[![GitHub issues](https://img.shields.io/github/issues/Kyobinoyo/Jellyfin-TaskNotifier?style=flat-square)](https://github.com/Kyobinoyo/Jellyfin-TaskNotifier/issues)
+
+<!-- Ecosystem & Tech Stack -->
+[![Jellyfin](https://img.shields.io/badge/Jellyfin-Plugin-00A4DC?style=flat-square&logo=jellyfin&logoColor=white)](https://jellyfin.org/)
+[![C# / .NET](https://img.shields.io/badge/C%23-.NET-512BD4?style=flat-square&logo=dotnet&logoColor=white)](https://dotnet.microsoft.com/)
+
+<!-- Stats & Community -->
+[![GitHub stars](https://img.shields.io/github/stars/Kyobinoyo/Jellyfin-TaskNotifier?style=flat-square)](https://github.com/Kyobinoyo/Jellyfin-TaskNotifier/stargazers)
+[![GitHub downloads (all releases)](https://img.shields.io/github/downloads/Kyobinoyo/Jellyfin-TaskNotifier/total?style=flat-square&color=orange)](https://github.com/Kyobinoyo/Jellyfin-TaskNotifier/releases)
+
 # Jellyfin Task Notifier
 
 A [Jellyfin](https://jellyfin.org/) plugin that bridges scheduled tasks to
