@@ -13,6 +13,8 @@
 
 # Jellyfin Task Notifier
 
+### **Made with Claude (AI) (just to be transparent)**
+
 A [Jellyfin](https://jellyfin.org/) plugin that bridges scheduled tasks to
 [Home Assistant](https://www.home-assistant.io/): a sensor turns `on` while a tracked
 task (e.g. "Scan Media Library") is running and `off` again once nothing tracked is
@@ -21,8 +23,6 @@ also fires a discrete Home Assistant event on every task start/finish for per-ta
 automations.
 
 Compatible with **Jellyfin 12.0** (ABI `12.0.0.0`, .NET 10).
-
-### **Made with Claude (AI) (just to be transparent)**
 
 ## Features
 
