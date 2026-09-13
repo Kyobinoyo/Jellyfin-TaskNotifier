@@ -58,6 +58,17 @@
                             </div>
                         </div>
 
+                        <div class="inputContainer">
+                            <input is="emby-input" type="number" id="StatusRefreshIntervalMinutes" min="0"
+                                   label="Periodic status refresh interval in minutes (0 = disabled)" />
+                            <div class="fieldDescription">
+                                Re-sends the current running/idle state to Home Assistant at this
+                                interval, based on the tasks actually running at that moment. Corrects
+                                missed updates and restores a <code>binary_sensor.*</code> entity after a
+                                Home Assistant restart.
+                            </div>
+                        </div>
+
                         <div class="checkboxContainer checkboxContainer-withDescription">
                             <label>
                                 <input is="emby-checkbox" type="checkbox" id="FireTaskEvents" />
@@ -104,6 +115,8 @@
                         document.querySelector('#AccessToken').value = config.AccessToken || '';
                         document.querySelector('#SensorEntityId').value = config.SensorEntityId || '';
                         document.querySelector('#IncludedTaskKeys').value = config.IncludedTaskKeys || '';
+                        document.querySelector('#StatusRefreshIntervalMinutes').value =
+                            config.StatusRefreshIntervalMinutes != null ? config.StatusRefreshIntervalMinutes : 5;
                         document.querySelector('#FireTaskEvents').checked = !!config.FireTaskEvents;
                         document.querySelector('#EventType').value = config.EventType || '';
                         document.querySelector('#AllowInvalidHttpsCertificate').checked =
@@ -120,6 +133,8 @@
                         config.AccessToken = document.querySelector('#AccessToken').value;
                         config.SensorEntityId = document.querySelector('#SensorEntityId').value;
                         config.IncludedTaskKeys = document.querySelector('#IncludedTaskKeys').value;
+                        config.StatusRefreshIntervalMinutes = Math.max(0,
+                            parseInt(document.querySelector('#StatusRefreshIntervalMinutes').value, 10) || 0);
                         config.FireTaskEvents = document.querySelector('#FireTaskEvents').checked;
                         config.EventType = document.querySelector('#EventType').value;
                         config.AllowInvalidHttpsCertificate =

@@ -22,6 +22,8 @@ public sealed class TaskNotifierService : IHostedService
     private readonly HomeAssistantNotifier _notifier;
     private readonly HashSet<string> _runningTaskNames = new();
     private readonly object _lock = new();
+    private CancellationTokenSource? _refreshCts;
+    private Task? _refreshLoop;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="TaskNotifierService"/> class.
@@ -40,16 +42,87 @@ public sealed class TaskNotifierService : IHostedService
     {
         _taskManager.TaskExecuting += OnTaskExecuting;
         _taskManager.TaskCompleted += OnTaskCompleted;
+        _refreshCts = new CancellationTokenSource();
+        _refreshLoop = Task.Run(() => RefreshLoopAsync(_refreshCts.Token), CancellationToken.None);
         _logger.LogInformation("Home Assistant Task Notifier is now watching scheduled tasks.");
         return Task.CompletedTask;
     }
 
     /// <inheritdoc />
-    public Task StopAsync(CancellationToken cancellationToken)
+    public async Task StopAsync(CancellationToken cancellationToken)
     {
         _taskManager.TaskExecuting -= OnTaskExecuting;
         _taskManager.TaskCompleted -= OnTaskCompleted;
-        return Task.CompletedTask;
+
+        if (_refreshCts is not null)
+        {
+            await _refreshCts.CancelAsync().ConfigureAwait(false);
+            if (_refreshLoop is not null)
+            {
+                await _refreshLoop.WaitAsync(cancellationToken).ConfigureAwait(false);
+            }
+
+            _refreshCts.Dispose();
+            _refreshCts = null;
+        }
+    }
+
+    /// <summary>
+    /// Periodically re-sends the sensor state, derived from the tasks that are actually
+    /// running right now. This corrects state lost through missed events or failed
+    /// requests, and recreates a REST-pushed entity after a Home Assistant restart.
+    /// The interval is re-read from the configuration every cycle, so changes apply
+    /// without restarting Jellyfin.
+    /// </summary>
+    private async Task RefreshLoopAsync(CancellationToken cancellationToken)
+    {
+        while (!cancellationToken.IsCancellationRequested)
+        {
+            var minutes = Plugin.Instance?.Configuration.StatusRefreshIntervalMinutes ?? 0;
+            try
+            {
+                // When disabled, just check back every minute whether it got enabled.
+                await Task.Delay(TimeSpan.FromMinutes(minutes > 0 ? minutes : 1), cancellationToken)
+                    .ConfigureAwait(false);
+            }
+            catch (OperationCanceledException)
+            {
+                return;
+            }
+
+            if (minutes <= 0)
+            {
+                continue;
+            }
+
+            try
+            {
+                await RefreshStatusAsync().ConfigureAwait(false);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Periodic Home Assistant status refresh failed");
+            }
+        }
+    }
+
+    private Task RefreshStatusAsync()
+    {
+        var running = _taskManager.ScheduledTasks
+            .Where(w => w.State == TaskState.Running && IsTracked(w.ScheduledTask.Key))
+            .Select(w => w.Name)
+            .ToList();
+
+        List<string> snapshot;
+        lock (_lock)
+        {
+            _runningTaskNames.Clear();
+            _runningTaskNames.UnionWith(running);
+            snapshot = _runningTaskNames.ToList();
+        }
+
+        _logger.LogDebug("Periodic status refresh: {Count} tracked task(s) running", snapshot.Count);
+        return _notifier.SetSensorStateAsync(snapshot.Count > 0, snapshot);
     }
 
     private void OnTaskExecuting(object? sender, GenericEventArgs<IScheduledTaskWorker> e)

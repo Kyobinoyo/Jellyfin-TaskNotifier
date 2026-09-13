@@ -41,6 +41,13 @@ public class PluginConfiguration : BasePluginConfiguration
     public string IncludedTaskKeys { get; set; } = string.Empty;
 
     /// <summary>
+    /// Gets or sets the interval in minutes at which the sensor state is periodically
+    /// re-sent to Home Assistant, based on the tasks actually running at that moment.
+    /// 0 disables the periodic refresh.
+    /// </summary>
+    public int StatusRefreshIntervalMinutes { get; set; } = 5;
+
+    /// <summary>
     /// Gets or sets a value indicating whether an invalid/self-signed HTTPS certificate
     /// on the Home Assistant side should be accepted.
     /// </summary>

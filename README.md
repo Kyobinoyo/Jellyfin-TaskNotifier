@@ -61,6 +61,7 @@ Future updates are picked up the same way any other catalog plugin update is.
 | Long-Lived Access Token | Token from Home Assistant → your profile → Security → Long-Lived Access Tokens | _(empty)_ |
 | Sensor entity id | Entity that is toggled `on`/`off` while a tracked task is running — see [Creating the sensor](#creating-the-sensor-in-home-assistant) | `binary_sensor.jellyfin_task_running` |
 | Task keys to track | Comma-separated scheduled task keys; empty tracks every task | _(empty, all tasks)_ |
+| Periodic status refresh interval | Minutes between periodic re-sends of the current running/idle state; `0` disables it | `5` |
 | Also fire a Home Assistant event | Fires an event per task start/finish in addition to the sensor | enabled |
 | Event type name | Home Assistant event type used when the above is enabled | `jellyfin_scheduled_task` |
 | Allow self-signed / invalid HTTPS certificate | Accept an invalid certificate when calling Home Assistant | disabled |
@@ -78,6 +79,10 @@ Jellyfin; the built-in library scan uses the key `RefreshLibrary`.
   entity.
 - If enabled, it also `POST`s to `{HomeAssistantUrl}/api/events/{EventType}` with the
   task key/name/phase/status on every start and finish.
+- Every `StatusRefreshIntervalMinutes` (default 5) it reads which tracked tasks are
+  actually running and re-sends the sensor state. This corrects missed updates (e.g.
+  Home Assistant briefly unreachable) and brings a `binary_sensor.*` entity back after
+  a Home Assistant restart.
 
 ## Creating the sensor in Home Assistant
 
