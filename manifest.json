@@ -5,8 +5,8 @@
     "description": "Toggles a Home Assistant sensor while a Jellyfin scheduled task runs and optionally fires an event per task.\n",
     "overview": "Sets a Home Assistant sensor on/off while a tracked scheduled task (e.g. Scan Media Library) is running",
     "owner": "Kyobinoyo",
-    "category": "General",
-    "imageUrl": "",
+    "category": "Administration",
+    "imageUrl": "https://raw.githubusercontent.com/Kyobinoyo/Jellyfin-TaskNotifier/main/assets/logo.png",
     "versions": [
       {
         "version": "1.1.1.1",
